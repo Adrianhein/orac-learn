@@ -1,0 +1,39 @@
+
+https://forums.oracle.com/ords/apexds/post/unable-to-install-compat-libcap1-1-10-in-ol8-2-5797
+
+Here the core installation for Oracle DB 19c on RHEL 8.4+.
+Complete Snippet can be found here: https://gitlab.com/-/snippets/2265219
+These legacy libraries are not available on RHEL 8, this is similar to how when you do a fresh install of RHEL, there is an option to install legacy libraries from RHEL 5,6 to support older applications or if a newer version of those libraries are installed, try to do a soft link which is done with libnsl.so.2.
+Hope this helps anyone having issues installing Oracle 19c on RHEL 8 and remember to test, test, test in Dev before promoting to Production.
+
+#################################
+# Oracle DB Installation #
+#################################
+# RHEL 8.4+ requires the following packages. Ignore for Oracle Linux 8.4+
+dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/compat-libcap1-1.10-7.el7.x86_64.rpm
+dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm
+dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/glibc-2.17-317.el7.x86_64.rpm
+ln -s /lib64/libnsl.so.2 /lib64/libnsl.so.1
+# Install Oracle 19c
+dnf install -y https://yum.oracle.com/repo/OracleLinux/OL7/latest/x86_64/getPackage/oracle-database-preinstall-19c-1.0-1.el7.x86_64.rpm
+dnf localinstall -y ./oracle-database-ee-19c-1.0-1.x86_64.rpm
+# Optional
+dnf localinstall -y ./jdk-17_linux-x64_bin.rpm
+dnf localinstall -y ./sqldeveloper-21.4.2-018.1706.noarch.rpm
+
+#################################
+# Exports & Aliases #
+#################################
+# Bash, Zsh Export(re-use for all your users.)
+# Following alias is for Oracle XE.
+echo '' >> $HOME/.bashrc; echo '#Oracle Environment Variables' >> $HOME/.bashrc
+echo 'export PATH="/opt/oracle/product/19c/dbhome_1/bin:$PATH"' >> $HOME/.bashrc
+echo 'export ORACLE_SID=XE' >> $HOME/.bashrc
+echo 'export ORAENV_ASK=NO' >> $HOME/.bashrc
+echo 'export ORACLE_HOME="/opt/oracle/product/19c/dbhome_1"' >> $HOME/.bashrc
+
+#################################
+# Oracle DB Configuration #
+#################################
+# Configure Oracle DB(setup password for sys).
+/etc/init.d/oracledb_ORCLCDB-19c configure
